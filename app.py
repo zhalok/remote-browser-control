@@ -46,8 +46,17 @@ async def handle_interaction(page: Page, interaction, websocket):
     # if interaction.action == "goto":
     #     await page.goto(interaction.payload["url"])
     #     await websocket.send_text(f"Navigated to {interaction.payload['url']}")
-    print("interaction", interaction)
-    if interaction["action"] == "click":
+    if interaction["action"] == "goto":
+        goto_request = interaction["payload"]
+        print("goto_request", goto_request)
+        # try:
+        #     await page.goto(goto_request["url"])
+        # except Exception:
+        #     print("error while handling go to operation")
+        #     traceback.format_exc()
+        await page.goto(goto_request["url"])
+        # print("interaction", interaction)
+    elif interaction["action"] == "click":
         click_request = interaction["payload"]
         viewport_size = await page.evaluate(
             "({width: window.innerWidth, height: window.innerHeight})"
@@ -60,13 +69,9 @@ async def handle_interaction(page: Page, interaction, websocket):
         frame_height = click_request["fh"]
         click_x = click_x * (playwright_width / frame_width)
         click_y = click_y * (playwright_height / frame_height)
-
-        # page.mouse.click(click_request["x"], click_request["y"])
         await page.mouse.click(click_x, click_y)
-        # await stream_browser_session(page=page, websocket=websocket)
-        # await websocket.send_text(
-        #     f"Clicked at ({click_request['x']}, {click_request['y']})"
-        # )
+
+        # await page.goto(goto_request["url"])
 
     elif interaction["action"] == "type":
         type_request = interaction["payload"]
