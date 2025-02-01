@@ -68,10 +68,18 @@ async def handle_interaction(page: Page, interaction, websocket):
         #     f"Clicked at ({click_request['x']}, {click_request['y']})"
         # )
 
-    # elif interaction.action == "type":
-    #     type_request = interaction.payload
-    #     await page.keyboard.type(type_request["text"])
-    #     await websocket.send_text(f"Typed {type_request['text']}")
+    elif interaction["action"] == "type":
+        type_request = interaction["payload"]
+        if type_request["text"] == "\n":
+            await page.keyboard.press("Enter")
+        elif type_request["text"] == "Backspace":
+            await page.keyboard.press("Backspace")
+        else:
+            await page.keyboard.press(type_request["text"])
+
+    elif interaction["action"] == "scroll":
+        scroll_request = interaction["payload"]
+        await page.mouse.wheel(scroll_request["dx"], scroll_request["dy"])
 
 
 @app.websocket("/stream/{session_id}")

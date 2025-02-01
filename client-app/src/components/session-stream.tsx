@@ -26,11 +26,11 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
   };
 
   const handleKeyDown = (e:any) => {
-    sendAction({ action: "type", text: e.key });
+    sendAction({ action: "type", payload:{text: e.key} });
   };
 
   const handleScroll = (e:any) => {
-    sendAction({ action: "scroll", dx: e.deltaX, dy: e.deltaY });
+    sendAction({ action: "scroll",payload:{ dx: e.deltaX, dy: e.deltaY} });
   };
   useEffect(() => {
     // Connect to the WebSocket server
