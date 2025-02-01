@@ -87,6 +87,7 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
         style={{ outline: "none" }}
       >
         <h2>Live Browser Stream</h2>
+        <div>
         <input
           value={gotoUrl}
           onChange={(e) => {
@@ -107,6 +108,9 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
         >
           Go to URL
         </button>
+        </div>
+       
+        
         <img
           ref={videoRef}
           alt="Playwright Stream"
