@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from controllers.browser import browser_router
-from store.session import get as sessionStoreGet
+from store.session import get as sessionStoreGet, remove as sessionStoreRemove
 import base64
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
-from store.websocket import set as webSocketSet
+from store.websocket import set as webSocketSet, delete as webSocketStoreDelete
 import os
 import traceback
 import json
@@ -77,54 +77,26 @@ async def handle_interaction(page: Page, interaction, websocket):
 @app.websocket("/stream/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.accept()
+    try:
 
-    webSocketSet(session_id, websocket)
-    session = sessionStoreGet(session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail="Session not found")
-    page = session["page"]
+        webSocketSet(session_id, websocket)
+        session = sessionStoreGet(session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Session not found")
+        page = session["page"]
 
-    while True:
-        asyncio.create_task(stream_browser_session(page, websocket))
-        data = await websocket.receive_text()
-        event = json.loads(data)
-        await handle_interaction(page=page, interaction=event, websocket=websocket)
+        while True:
+            asyncio.create_task(stream_browser_session(page, websocket))
+            data = await websocket.receive_text()
+            event = json.loads(data)
+            await handle_interaction(page=page, interaction=event, websocket=websocket)
 
-    # try:
-    #     while True:
-    #         data = await websocket.receive_text()
-    #         action = Action.parse_raw(data)
-    #         if session_id in sessions:
-    #             session = sessions[session_id]
-    #             page = session["page"]
-
-    #             # Perform the action from WebSocket client
-    #             if action.action == "goto":
-    #                 await page.goto(action.payload["url"])
-    #                 await websocket.send_text(f"Navigated to {action.payload['url']}")
-
-    #             elif action.action == "click":
-    #                 click_request = action.payload
-    #                 await page.mouse.click(click_request["x"], click_request["y"])
-    #                 await websocket.send_text(
-    #                     f"Clicked at ({click_request['x']}, {click_request['y']})"
-    #                 )
-
-    #             elif action.action == "type":
-    #                 type_request = action.payload
-    #                 await page.fill(type_request["selector"], type_request["text"])
-    #                 await websocket.send_text(
-    #                     f"Typed '{type_request['text']}' in {type_request['selector']}"
-    #                 )
-
-    #             else:
-    #                 await websocket.send_text("Unknown action")
-    #         else:
-    #             await websocket.send_text(f"Session {session_id} not found")
-
-    # except WebSocketDisconnect:
-    #     webSocketStoreDelete[session_id]
-    #     await websocket.close()
+    except WebSocketDisconnect:
+        webSocketStoreDelete[session_id]
+        session = sessionStoreGet(session_id)
+        browser = session["browser"]
+        await browser.close()
+        await websocket.close()
 
 
 app.include_router(browser_router)

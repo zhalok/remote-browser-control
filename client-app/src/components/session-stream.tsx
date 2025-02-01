@@ -56,10 +56,12 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
 
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
+      videoRef.current = null;
       setErrorMessage("WebSocket connection failed." + error);
     };
 
     ws.onclose = () => {
+    videoRef.current = null;
       console.log("WebSocket closed.");
     };
 
