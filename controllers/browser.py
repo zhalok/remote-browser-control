@@ -1,5 +1,5 @@
 import uuid
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Page
 from models.session_response import SessionResponse
 from store.session import add
 from fastapi import APIRouter
@@ -13,6 +13,7 @@ async def start_browser():
     playwright_instance = await async_playwright().start()
     browser = await playwright_instance.chromium.launch(headless=False)
     page = await browser.new_page()
+    await page.goto("https://google.com")
     add(session_id, playwright_instance, browser, page)
 
     return {"sessionId": session_id, "message": "Browser started"}
