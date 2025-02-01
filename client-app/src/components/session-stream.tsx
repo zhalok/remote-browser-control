@@ -16,22 +16,22 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
     };
 
     ws.onmessage = (event) => {
-    //   const blob = new Blob([event.data], { type: "image/png" });
-    //   const url = URL.createObjectURL(blob);
-    //   if (videoRef.current) {
-    //     //@ts-ignore
-    //     videoRef.current.src = url;
-    //   }
+      const blob = new Blob([event.data], { type: "image/png" });
+      const url = URL.createObjectURL(blob);
+      if (videoRef.current) {
+        //@ts-ignore
+        videoRef.current.src = url;
+      }
 
-    setMessages((m)=>{
-        return [...m,event.data]
-    })
+    // setMessages((m)=>{
+    //     return [...m,event.data]
+    // })
 
     };
 
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
-      setErrorMessage("WebSocket connection failed.");
+      setErrorMessage("WebSocket connection failed."+error,);
     };
 
     ws.onclose = () => {
@@ -41,9 +41,9 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
 
     // Clean up on unmount
     return () => {
-      if (ws) {
-        ws.close();
-      }
+    //   if (ws) {
+    //     ws.close();
+    //   }
     };
   }, []);
 
@@ -51,16 +51,16 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Browser Stream</h2>
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-      {/* <div className="border rounded bg-gray-100 h-64 flex justify-center items-center">
+      <div className="border rounded bg-gray-100 h-64 flex justify-center items-center">
         {connected ? (
           <img ref={videoRef} alt="Browser Stream" className="max-w-full max-h-full" />
         ) : (
           <p>Connecting to browser...</p>
         )}
-      </div> */}
-      <ul>{messages.map((m)=>{
+      </div>
+      {/* <ul>{messages.map((m)=>{
         return <li>{m}</li>
-      })}</ul>
+      })}</ul> */}
     </div>
   );
 }

@@ -37,17 +37,17 @@ async def health_check():
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.accept()
 
-    # Store WebSocket clients by session_id
-    # websocket_clients[session_id] = websocket
     webSocketSet(session_id, websocket)
-    session = sessionStoreGet(session_id=session_id)
-    page = session["page"]
+
     while True:
-        # screenshot = await page.screenshot()
-        message = str(uuid.uuid4())
+        session = sessionStoreGet(session_id=session_id)
+        page = session["page"]
+
+        screenshot = await page.screenshot()
+        await websocket.send_bytes(screenshot)
         # encoded_image = base64.b64encode(screenshot).decode("utf-8")
-        await websocket.send_text(f"{message}")
-        await asyncio.sleep(0.1)
+        # await websocket.send_text(f"{encoded_image}")
+        # await asyncio.sleep(0.1)
 
     # try:
     #     while True:
