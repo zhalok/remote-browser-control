@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export function SessionStream({ sessionId }: { sessionId: string }) {
+export function SessionStream({ sessionId }: { sessionId: string, handleSessionClose:()=>void }) {
   const videoRef = useRef(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [gotoUrl, setGotoUrl] = useState("");
@@ -75,8 +75,19 @@ export function SessionStream({ sessionId }: { sessionId: string }) {
     };
   }, []);
 
+  useEffect(() => {
+   if(!sessionId){
+    wsInstance && wsInstance.close()
+    setWsInstance(null)
+   }
+  }, [sessionId]);
+
   return (
     <div className="p-4">
+      <button onClick={()=>{
+        wsInstance && wsInstance.close()
+       setWsInstance(null)
+      }}>Close Connection</button>
       <h2 className="text-xl font-bold mb-4">Browser Stream</h2>
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
 

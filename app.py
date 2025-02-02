@@ -1,7 +1,11 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from controllers.browser import browser_router
-from store.session import get as sessionStoreGet, remove as sessionStoreRemove
+from store.session import (
+    get as sessionStoreGet,
+    remove as sessionStoreRemove,
+    exists as sessionStoreExists,
+)
 import base64
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,31 +35,33 @@ async def health_check():
     return {"status": "ok"}
 
 
-async def stream_browser_session(page: Page, websocket):
+async def stream_browser_session(session_id: str, websocket: WebSocket):
+
     while True:
         try:
+
+            sessionExists = sessionStoreExists(session_id)
+            if not sessionExists:
+                break
+
+            session = sessionStoreGet(session_id)
+
+            page: Page = session["page"]
+
             screenshot = await page.screenshot()
+
             await websocket.send_bytes(screenshot)
+            # await asyncio.sleep(0.1)
         except Exception:
-            traceback.print_exc()
+            break
 
 
-async def handle_interaction(page: Page, interaction, websocket):
+async def handle_interaction(page: Page, interaction):
 
-    # Perform the action from WebSocket client
-    # if interaction.action == "goto":
-    #     await page.goto(interaction.payload["url"])
-    #     await websocket.send_text(f"Navigated to {interaction.payload['url']}")
     if interaction["action"] == "goto":
         goto_request = interaction["payload"]
         print("goto_request", goto_request)
-        # try:
-        #     await page.goto(goto_request["url"])
-        # except Exception:
-        #     print("error while handling go to operation")
-        #     traceback.format_exc()
         await page.goto(goto_request["url"])
-        # print("interaction", interaction)
     elif interaction["action"] == "click":
         click_request = interaction["payload"]
         viewport_size = await page.evaluate(
@@ -70,8 +76,6 @@ async def handle_interaction(page: Page, interaction, websocket):
         click_x = click_x * (playwright_width / frame_width)
         click_y = click_y * (playwright_height / frame_height)
         await page.mouse.click(click_x, click_y)
-
-        # await page.goto(goto_request["url"])
 
     elif interaction["action"] == "type":
         type_request = interaction["payload"]
@@ -92,24 +96,27 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     await websocket.accept()
     try:
 
-        webSocketSet(session_id, websocket)
         session = sessionStoreGet(session_id)
         if session is None:
             raise HTTPException(status_code=404, detail="Session not found")
         page = session["page"]
+        asyncio.create_task(
+            stream_browser_session(session_id=session_id, websocket=websocket)
+        )
 
         while True:
-            asyncio.create_task(stream_browser_session(page, websocket))
+
             data = await websocket.receive_text()
             event = json.loads(data)
-            await handle_interaction(page=page, interaction=event, websocket=websocket)
+            await handle_interaction(page=page, interaction=event)
 
     except WebSocketDisconnect:
-        webSocketStoreDelete[session_id]
         session = sessionStoreGet(session_id)
-        browser = session["browser"]
-        await browser.close()
-        await websocket.close()
+        if session is not None:
+            browser = session["browser"]
+            sessionStoreRemove(session_id)
+            await browser.close()
+            print(f"session {session_id} closed")
 
 
 app.include_router(browser_router)
