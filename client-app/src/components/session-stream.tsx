@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 
-export function SessionStream({ sessionId }: { sessionId: string, handleSessionClose:()=>void }) {
+export function SessionStream({ }: {  }) {
+  const { id:sessionId } = useParams<{id:string}>();
   const videoRef = useRef(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [gotoUrl, setGotoUrl] = useState("");
@@ -65,6 +67,8 @@ export function SessionStream({ sessionId }: { sessionId: string, handleSessionC
     ws.onclose = () => {
       videoRef.current = null;
       console.log("WebSocket closed.");
+      setWsInstance(null)
+      window.close()
     };
 
     // Clean up on unmount
@@ -75,17 +79,13 @@ export function SessionStream({ sessionId }: { sessionId: string, handleSessionC
     };
   }, []);
 
-  useEffect(() => {
-   if(!sessionId){
-    wsInstance && wsInstance.close()
-    setWsInstance(null)
-   }
-  }, [sessionId]);
+  
 
   return (
     <div className="p-4">
       <button onClick={()=>{
         wsInstance && wsInstance.close()
+        window.close()
        setWsInstance(null)
       }}>Close Connection</button>
       <h2 className="text-xl font-bold mb-4">Browser Stream</h2>
