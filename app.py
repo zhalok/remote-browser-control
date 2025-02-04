@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel
 from controllers.browser import browser_router
 from store.session import (
     get as sessionStoreGet,
@@ -9,9 +8,7 @@ from store.session import (
 import base64
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
-from store.websocket import set as webSocketSet, delete as webSocketStoreDelete
 import os
-import traceback
 import json
 from playwright.async_api import Page
 
