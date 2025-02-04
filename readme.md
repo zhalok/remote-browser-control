@@ -33,3 +33,5 @@ run front end dev server:
 `yarn dev`
 
 open http://localhost:5173 at browser
+
+recording: https://www.loom.com/share/04b79ed90e344c94a2c50a5b790cda73?sid=e7bb2668-1421-4e39-980b-0257d8fb66ff
