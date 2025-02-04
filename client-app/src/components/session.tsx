@@ -7,7 +7,7 @@ export function Session() {
     const res = await response.json();
     const session_id = res.sessionId;
     // setSessionId(session_id);
-    window.open(`http://localhost:5173/sessions/${session_id}`,"_blank");
+    window.open(`${import.meta.env.VITE_APP_API_BASE_URL}/sessions/${session_id}`,"_blank");
   };
   return (
     <>
